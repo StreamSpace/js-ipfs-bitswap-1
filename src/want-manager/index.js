@@ -40,9 +40,11 @@ module.exports = class WantManager {
     // broadcast changes
     let $peers = Array.from(this.peers.values()); 
     console.log('all peers',$peers);
-    let p = $peers[Math.floor(Math.random() * $peers.length)];
-    console.log('selected peer',p);
-    p.addEntries(entries)
+    if($peers.length > 0){
+      let p = $peers[Math.floor(Math.random() * $peers.length)];
+      console.log('selected peer',p);
+      p.addEntries(entries)
+    }
     // let i= 0;
     // for (const p of this.peers.values()) {
     //   if(i<2){
