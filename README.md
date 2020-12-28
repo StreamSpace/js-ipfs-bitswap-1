@@ -34,13 +34,13 @@
 ### npm
 
 ```bash
-> npm install ipfs-bitswap
+> npm install ss-ipfs-bitswap
 ```
 
 ### Use in Node.js or in the browser with browserify, webpack or any other bundler
 
 ```js
-const Bitswap = require('ipfs-bitswap')
+const Bitswap = require('ss-ipfs-bitswap')
 ```
 
 ### Use in a browser using a script tag
