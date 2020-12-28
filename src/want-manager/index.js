@@ -38,9 +38,19 @@ module.exports = class WantManager {
     })
 
     // broadcast changes
-    for (const p of this.peers.values()) {
-      p.addEntries(entries)
-    }
+    let $peers = Array.from(this.peers.values()); 
+    console.log('all peers',$peers);
+    let p = $peers[Math.floor(Math.random() * $peers.length)];
+    console.log('selected peer',p);
+    p.addEntries(entries)
+    // let i= 0;
+    // for (const p of this.peers.values()) {
+    //   if(i<2){
+    //   console.log('add entrries to peer',p);
+    //   p.addEntries(entries)
+    //   }
+    //   i++;
+    // }
   }
 
   _startPeerHandler (peerId) {
