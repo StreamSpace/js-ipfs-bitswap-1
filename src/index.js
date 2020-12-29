@@ -223,8 +223,9 @@ class Bitswap {
     // as trying to get it from the datastore
     const controller = new AbortController()
     const signal = anySignal([options.signal, controller.signal])
+    
 
-    const block = await Promise.race([
+    let block = await Promise.race([
       this.notifications.wantBlock(cid, {
         signal
       }),
@@ -232,9 +233,9 @@ class Bitswap {
         signal
       })
     ])
-
+    
     // since we have the block we can now remove our listener
-    controller.abort()
+    controller.abort();
 
     return block
   }
@@ -252,6 +253,8 @@ class Bitswap {
     for await (const cid of cids) {
       yield this.get(cid, options)
     }
+
+    console.log('completed get many')
   }
 
   /**

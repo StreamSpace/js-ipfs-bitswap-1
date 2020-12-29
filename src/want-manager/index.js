@@ -39,11 +39,47 @@ module.exports = class WantManager {
 
     // broadcast changes
     let $peers = Array.from(this.peers.values()); 
-    console.log('all peers',$peers);
+    console.log('all peers',$peers,entries);
+    let prevEntries = []; 
+    
     if($peers.length > 0){
-      let p = $peers[Math.floor(Math.random() * $peers.length)];
-      console.log('selected peer',p);
-      p.addEntries(entries)
+      if( entries.length > 0){
+        if(prevEntries === 0){
+          this.p = $peers[Math.floor(Math.random() * $peers.length)];
+          console.log('selected peer',this.p,entries);
+          this.p.addEntries(entries);
+        }
+        if( prevEntries && entries &&  prevEntries[0] && entries[0] &&  entries[0].entry.cid.string !== prevEntries[0].entry.cid.string ){
+          this.p  = $peers[Math.floor(Math.random() * $peers.length)];
+          console.log('selected peer',this.p,entries);
+          this.p.addEntries(entries);
+        }
+       
+
+      if(this.interval) clearInterval(this.interval);
+      this.interval = setInterval(()=>{
+          if(entries[0] && entries[1] && entries[0].entry.cid.string === entries[1].entry.cid.string && !entries[0].cancel && !entries[1].cancel ){
+            console.log('entries first condition',entries);
+            this.p = $peers[Math.floor(Math.random() * $peers.length)];
+            console.log('selected peer',this.p,entries);
+            this.p.addEntries(entries);
+          }    
+          if( prevEntries.length === 1 && entries.length === 1 && prevEntries[0] && entries[0] &&  entries[0].entry.cid.string === prevEntries[0].entry.cid.string && !entries[0].cancel){
+            // clearTimeout(interval);
+            console.log('entries second condition',entries,prevEntries);
+            this.p  = $peers[Math.floor(Math.random() * $peers.length)];
+            console.log('selected peer',this.p,entries);
+            this.p.addEntries(entries);
+            }
+        },15000);
+        
+      }
+      
+
+       
+    }
+    if(entries){
+      prevEntries = [...entries]
     }
     // let i= 0;
     // for (const p of this.peers.values()) {
