@@ -1,85 +1,104 @@
-'use strict'
+"use strict";
 
-const Message = require('../types/message')
-const Wantlist = require('../types/wantlist')
-const CONSTANTS = require('../constants')
-const MsgQueue = require('./msg-queue')
-const logger = require('../utils').logger
+const Message = require("../types/message");
+const Wantlist = require("../types/wantlist");
+const CONSTANTS = require("../constants");
+const MsgQueue = require("./msg-queue");
+const logger = require("../utils").logger;
 
 module.exports = class WantManager {
-  constructor (peerId, network, stats) {
-    this.peers = new Map()
-    this.wantlist = new Wantlist(stats)
+  constructor(peerId, network, stats) {
+    this.peers = new Map();
+    this.wantlist = new Wantlist(stats);
 
-    this.network = network
-    this._stats = stats
+    this.network = network;
+    this._stats = stats;
 
-    this._peerId = peerId
-    this._log = logger(peerId, 'want')
+    this._peerId = peerId;
+    this._log = logger(peerId, "want");
   }
 
-  _addEntries (cids, cancel, force) {
+  _addEntries(cids, cancel, force) {
     const entries = cids.map((cid, i) => {
-      return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, Message.WantType.Block, cancel)
-    })
+      return new Message.Entry(
+        cid,
+        CONSTANTS.kMaxPriority - i,
+        Message.WantType.Block,
+        cancel
+      );
+    });
 
     entries.forEach((e) => {
       // add changes to our wantlist
       if (e.cancel) {
         if (force) {
-          this.wantlist.removeForce(e.cid)
+          this.wantlist.removeForce(e.cid);
         } else {
-          this.wantlist.remove(e.cid)
+          this.wantlist.remove(e.cid);
         }
       } else {
-        this._log('adding to wl')
-        this.wantlist.add(e.cid, e.priority)
+        this._log("adding to wl");
+        this.wantlist.add(e.cid, e.priority);
       }
-    })
+    });
 
     // broadcast changes
-    let $peers = Array.from(this.peers.values()); 
-    console.log('all peers',$peers,entries);
-    let prevEntries = []; 
-    
-    if($peers.length > 0){
-      if( entries.length > 0){
-        if(prevEntries === 0){
+    let $peers = Array.from(this.peers.values());
+    console.log("all peers", $peers, entries);
+    let prevEntries = [];
+
+    if ($peers.length > 0) {
+      if (entries.length > 0) {
+        if (prevEntries === 0) {
           this.p = $peers[Math.floor(Math.random() * $peers.length)];
-          console.log('selected peer',this.p,entries);
+          console.log("selected peer", this.p, entries);
           this.p.addEntries(entries);
         }
-        if( prevEntries && entries &&  prevEntries[0] && entries[0] &&  entries[0].entry.cid.string !== prevEntries[0].entry.cid.string ){
-          this.p  = $peers[Math.floor(Math.random() * $peers.length)];
-          console.log('selected peer',this.p,entries);
+        if (
+          prevEntries &&
+          entries &&
+          prevEntries[0] &&
+          entries[0] &&
+          entries[0].entry.cid.string !== prevEntries[0].entry.cid.string
+        ) {
+          this.p = $peers[Math.floor(Math.random() * $peers.length)];
+          console.log("selected peer", this.p, entries);
           this.p.addEntries(entries);
         }
-       
 
-      if(this.interval) clearInterval(this.interval);
-      this.interval = setInterval(()=>{
-          if(entries[0] && entries[1] && entries[0].entry.cid.string === entries[1].entry.cid.string && !entries[0].cancel && !entries[1].cancel ){
-            console.log('entries first condition',entries);
+        if (this.interval) clearInterval(this.interval);
+        this.interval = setInterval(() => {
+          if (
+            entries[0] &&
+            entries[1] &&
+            entries[0].entry.cid.string === entries[1].entry.cid.string &&
+            !entries[0].cancel &&
+            !entries[1].cancel
+          ) {
+            console.log("entries first condition", entries);
             this.p = $peers[Math.floor(Math.random() * $peers.length)];
-            console.log('selected peer',this.p,entries);
+            console.log("selected peer", this.p, entries);
             this.p.addEntries(entries);
-          }    
-          if( prevEntries.length === 1 && entries.length === 1 && prevEntries[0] && entries[0] &&  entries[0].entry.cid.string === prevEntries[0].entry.cid.string && !entries[0].cancel){
+          }
+          if (
+            prevEntries.length === 1 &&
+            entries.length === 1 &&
+            prevEntries[0] &&
+            entries[0] &&
+            entries[0].entry.cid.string === prevEntries[0].entry.cid.string &&
+            !entries[0].cancel
+          ) {
             // clearTimeout(interval);
-            console.log('entries second condition',entries,prevEntries);
-            this.p  = $peers[Math.floor(Math.random() * $peers.length)];
-            console.log('selected peer',this.p,entries);
+            console.log("entries second condition", entries, prevEntries);
+            this.p = $peers[Math.floor(Math.random() * $peers.length)];
+            console.log("selected peer", this.p, entries);
             this.p.addEntries(entries);
-            }
-        },15000);
-        
+          }
+        }, 8000);
       }
-      
-
-       
     }
-    if(entries){
-      prevEntries = [...entries]
+    if (entries) {
+      prevEntries = [...entries];
     }
     // let i= 0;
     // for (const p of this.peers.values()) {
@@ -91,86 +110,85 @@ module.exports = class WantManager {
     // }
   }
 
-  _startPeerHandler (peerId) {
-    let mq = this.peers.get(peerId.toB58String())
+  _startPeerHandler(peerId) {
+    let mq = this.peers.get(peerId.toB58String());
 
     if (mq) {
-      mq.refcnt++
-      return
+      mq.refcnt++;
+      return;
     }
 
-    mq = new MsgQueue(this._peerId, peerId, this.network)
+    mq = new MsgQueue(this._peerId, peerId, this.network);
 
     // new peer, give them the full wantlist
-    const fullwantlist = new Message(true)
+    const fullwantlist = new Message(true);
 
     for (const entry of this.wantlist.entries()) {
-      fullwantlist.addEntry(entry[1].cid, entry[1].priority)
+      fullwantlist.addEntry(entry[1].cid, entry[1].priority);
     }
 
-    mq.addMessage(fullwantlist)
+    mq.addMessage(fullwantlist);
 
-    this.peers.set(peerId.toB58String(), mq)
-    return mq
+    this.peers.set(peerId.toB58String(), mq);
+    return mq;
   }
 
-  _stopPeerHandler (peerId) {
-    const mq = this.peers.get(peerId.toB58String())
+  _stopPeerHandler(peerId) {
+    const mq = this.peers.get(peerId.toB58String());
 
     if (!mq) {
-      return
+      return;
     }
 
-    mq.refcnt--
+    mq.refcnt--;
     if (mq.refcnt > 0) {
-      return
+      return;
     }
 
-    this.peers.delete(peerId.toB58String())
+    this.peers.delete(peerId.toB58String());
   }
 
   // add all the cids to the wantlist
-  wantBlocks (cids, options = {}) {
-    this._addEntries(cids, false)
+  wantBlocks(cids, options = {}) {
+    this._addEntries(cids, false);
 
     if (options && options.signal) {
-      options.signal.addEventListener('abort', () => {
-        this.cancelWants(cids)
-      })
+      options.signal.addEventListener("abort", () => {
+        this.cancelWants(cids);
+      });
     }
   }
 
   // remove blocks of all the given keys without respecting refcounts
-  unwantBlocks (cids) {
-    this._log('unwant blocks: %s', cids.length)
-    this._addEntries(cids, true, true)
+  unwantBlocks(cids) {
+    this._log("unwant blocks: %s", cids.length);
+    this._addEntries(cids, true, true);
   }
 
   // cancel wanting all of the given keys
-  cancelWants (cids) {
-    this._log('cancel wants: %s', cids.length)
-    this._addEntries(cids, true)
+  cancelWants(cids) {
+    this._log("cancel wants: %s", cids.length);
+    this._addEntries(cids, true);
   }
 
   // Returns a list of all currently connected peers
-  connectedPeers () {
-    return Array.from(this.peers.keys())
+  connectedPeers() {
+    return Array.from(this.peers.keys());
   }
 
-  connected (peerId) {
-    this._startPeerHandler(peerId)
+  connected(peerId) {
+    this._startPeerHandler(peerId);
   }
 
-  disconnected (peerId) {
-    this._stopPeerHandler(peerId)
+  disconnected(peerId) {
+    this._stopPeerHandler(peerId);
   }
 
-  start () {
-  }
+  start() {}
 
-  stop () {
-    this.peers.forEach((mq) => this.disconnected(mq.peerId))
+  stop() {
+    this.peers.forEach((mq) => this.disconnected(mq.peerId));
 
-    clearInterval(this.timer)
+    clearInterval(this.timer);
   }
-}
+};
