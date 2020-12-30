@@ -16,7 +16,22 @@ module.exports = class WantManager {
 
     this._peerId = peerId;
     this._log = logger(peerId, "want");
+    // this.busyPeers = new Map();
   }
+
+  // getBusyPeers() {
+  //   return Array.from(this.busyPeers.values())
+  // }
+
+  // addPeerBusy(peerId, blockProcessing, failedBlock) {
+  //   this.busyPeers.set(peerId, {peerId, blockProcessing, failedBlock})
+  //   // if(this.busyPeers.has(peerId)){
+  //   //   let element = this.busyPeers.get(peerId)
+  //   //   if(blockProcessing){
+
+  //   //   }
+  //   // }
+  // }
 
   _addEntries(cids, cancel, force) {
     const entries = cids.map((cid, i) => {
@@ -44,12 +59,14 @@ module.exports = class WantManager {
 
     // broadcast changes
     let $peers = Array.from(this.peers.values());
-    console.log("all peers", $peers, entries);
     let prevEntries = [];
+    console.log("all peers", $peers, entries, new Date().getTime());
 
     if ($peers.length > 0) {
       if (entries.length > 0) {
-        if (prevEntries === 0) {
+        console.log("all peers prev", prevEntries, new Date().getTime());
+
+        if (prevEntries.length === 0) {
           this.p = $peers[Math.floor(Math.random() * $peers.length)];
           console.log("selected peer", this.p, entries);
           this.p.addEntries(entries);
@@ -94,12 +111,14 @@ module.exports = class WantManager {
             console.log("selected peer", this.p, entries);
             this.p.addEntries(entries);
           }
-        }, 8000);
+        }, 4000);
       }
     }
+
     if (entries) {
       prevEntries = [...entries];
     }
+
     // let i= 0;
     // for (const p of this.peers.values()) {
     //   if(i<2){
