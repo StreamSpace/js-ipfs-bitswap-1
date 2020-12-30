@@ -60,7 +60,7 @@ module.exports = class WantManager {
     // broadcast changes
     let $peers = Array.from(this.peers.values());
     let prevEntries = [];
-    console.log("all peers", $peers, entries, new Date().getTime());
+    console.log("all peers", $peers, entries, parseInt(new Date().getTime()/ 1000));
 
     if ($peers.length > 0) {
       if (entries.length > 0) {
@@ -68,7 +68,7 @@ module.exports = class WantManager {
 
         if (prevEntries.length === 0) {
           this.p = $peers[Math.floor(Math.random() * $peers.length)];
-          console.log("selected peer", this.p, entries);
+          console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
         }
         if (
@@ -79,7 +79,7 @@ module.exports = class WantManager {
           entries[0].entry.cid.string !== prevEntries[0].entry.cid.string
         ) {
           this.p = $peers[Math.floor(Math.random() * $peers.length)];
-          console.log("selected peer", this.p, entries);
+          console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
         }
 
@@ -92,9 +92,9 @@ module.exports = class WantManager {
             !entries[0].cancel &&
             !entries[1].cancel
           ) {
-            console.log("entries first condition", entries);
+            console.log("entries first condition", entries, parseInt(new Date().getTime()/ 1000));
             this.p = $peers[Math.floor(Math.random() * $peers.length)];
-            console.log("selected peer", this.p, entries);
+            console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
             this.p.addEntries(entries);
           }
           if (
@@ -106,10 +106,11 @@ module.exports = class WantManager {
             !entries[0].cancel
           ) {
             // clearTimeout(interval);
-            console.log("entries second condition", entries, prevEntries);
+            console.log("entries second condition", entries, prevEntries, parseInt(new Date().getTime()/ 1000));
             this.p = $peers[Math.floor(Math.random() * $peers.length)];
-            console.log("selected peer", this.p, entries);
+            console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
             this.p.addEntries(entries);
+            // this.p.
           }
         }, 4000);
       }
