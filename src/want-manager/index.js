@@ -16,22 +16,22 @@ module.exports = class WantManager {
 
     this._peerId = peerId;
     this._log = logger(peerId, "want");
-    // this.busyPeers = new Map();
+    this.busyPeers = new Map();
   }
 
-  // getBusyPeers() {
-  //   return Array.from(this.busyPeers.values())
-  // }
+  getBusyPeers() {
+    return Array.from(this.busyPeers.values())
+  }
 
-  // addPeerBusy(peerId, blockProcessing, failedBlock) {
-  //   this.busyPeers.set(peerId, {peerId, blockProcessing, failedBlock})
-  //   // if(this.busyPeers.has(peerId)){
-  //   //   let element = this.busyPeers.get(peerId)
-  //   //   if(blockProcessing){
+  addPeerBusy(peerId, blockProcessing, failedBlock) {
+    this.busyPeers.set(peerId, {peerId, blockProcessing, failedBlock})
+    // if(this.busyPeers.has(peerId)){
+    //   let element = this.busyPeers.get(peerId)
+    //   if(blockProcessing){
 
-  //   //   }
-  //   // }
-  // }
+    //   }
+    // }
+  }
 
   _addEntries(cids, cancel, force) {
     const entries = cids.map((cid, i) => {
@@ -61,15 +61,22 @@ module.exports = class WantManager {
     let $peers = Array.from(this.peers.values());
     let prevEntries = [];
     console.log("all peers", $peers, entries, parseInt(new Date().getTime()/ 1000));
+    let availablePeers = $peers.filter((ele) => {
+      console.log("ELEMENTSSSSSSS", ele)
+      if(!this.busyPeers.has(ele)){
+        return ele
+      }
+    })
 
-    if ($peers.length > 0) {
+    if (availablePeers.length > 0) {
       if (entries.length > 0) {
         console.log("all peers prev", prevEntries, new Date().getTime());
 
         if (prevEntries.length === 0) {
-          this.p = $peers[Math.floor(Math.random() * $peers.length)];
+          this.p = availablePeers[Math.floor(Math.random() * availablePeers.length)];
           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
+          this.busyPeers.set(this.p)
         }
         if (
           prevEntries &&
@@ -107,10 +114,14 @@ module.exports = class WantManager {
           ) {
             // clearTimeout(interval);
             console.log("entries second condition", entries, prevEntries, parseInt(new Date().getTime()/ 1000));
-            this.p = $peers[Math.floor(Math.random() * $peers.length)];
+            // this.p = $peers[Math.floor(Math.random() * $peers.length)];
+            this.p = availablePeers[Math.floor(Math.random() * availablePeers.length)];
+
             console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
             this.p.addEntries(entries);
             // this.p.
+            this.busyPeers.set(this.p)
+
           }
         }, 4000);
       }
