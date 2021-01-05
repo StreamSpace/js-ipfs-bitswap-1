@@ -5,7 +5,7 @@ const Wantlist = require("../types/wantlist");
 const CONSTANTS = require("../constants");
 const MsgQueue = require("./msg-queue");
 const logger = require("../utils").logger;
-
+let retryTime = 5
 module.exports = class WantManager {
   constructor(peerId, network, stats) {
     this.peers = new Map();
@@ -43,7 +43,7 @@ module.exports = class WantManager {
 
       if(this.busyPeers.has(ele.peerId.toB58String())){
         let bp = this.busyPeers.get(ele.peerId.toB58String())
-        if(parseInt(new Date().getTime()/1000) >= bp.addedAt + 4 ){
+        if(parseInt(new Date().getTime()/1000) >= bp.addedAt + retryTime ){
           this.busyPeers.delete(ele.peerId.toB58String())
           return ele;
         }
@@ -88,7 +88,7 @@ module.exports = class WantManager {
 
       if(this.busyPeers.has(ele.peerId.toB58String())){
         let bp = this.busyPeers.get(ele.peerId.toB58String())
-        if(parseInt(new Date().getTime()/1000) >= bp.addedAt + 4 ){
+        if(parseInt(new Date().getTime()/1000) >= bp.addedAt + retryTime ){
           this.busyPeers.delete(ele.peerId.toB58String())
           return ele;
         }
@@ -134,7 +134,7 @@ module.exports = class WantManager {
 
             if(this.busyPeers.has(ele.peerId.toB58String())){
               let bp = this.busyPeers.get(ele.peerId.toB58String())
-              if(parseInt(new Date().getTime()/1000) >= bp.addedAt + 4 ){
+              if(parseInt(new Date().getTime()/1000) >= bp.addedAt + retryTime ){
                 this.busyPeers.delete(ele.peerId.toB58String())
                 return ele;
               }
@@ -181,7 +181,7 @@ module.exports = class WantManager {
             this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
 
           }
-        }, 4000);
+        }, retryTime * 1000);
       }
     }
 
