@@ -106,7 +106,9 @@ module.exports = class WantManager {
         // if (prevEntries.length === 0) {
           
         //   console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
-          this.busyPeers.delete(this.busyPeers.keys()[0]);
+          if(this.busyPeers.keys().length > 0){
+              this.busyPeers.delete(this.busyPeers.keys()[0]);
+          }
           this.p = this.availablePeers[Math.floor(Math.random() * this.availablePeers.length)];
           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
