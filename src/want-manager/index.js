@@ -5,7 +5,7 @@ const Wantlist = require("../types/wantlist");
 const CONSTANTS = require("../constants");
 const MsgQueue = require("./msg-queue");
 const logger = require("../utils").logger;
-let retryTime = 5
+let retryTime = 3
 module.exports = class WantManager {
   constructor(peerId, network, stats) {
     this.peers = new Map();
@@ -17,6 +17,8 @@ module.exports = class WantManager {
     this._peerId = peerId;
     this._log = logger(peerId, "want");
     this.busyPeers = new Map();
+    this.availablePeers = [];
+
   }
 
   getBusyPeers() {
@@ -83,28 +85,27 @@ module.exports = class WantManager {
     let $peers = Array.from(this.peers.values());
     let prevEntries = [];
     console.log("all peers", $peers, entries, parseInt(new Date().getTime()/ 1000));
-    
     if(this.availablePeers.length === 0){
       this.availablePeers = [...$peers];
     }
 
     if (this.availablePeers.length > 0) {
       if (entries.length > 0) {
-        console.log("all peers prev", prevEntries, new Date().getTime());
+        // console.log("all peers prev", prevEntries, new Date().getTime());
 
         // if (prevEntries.length === 0) {
           
-        //   console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
+        console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
         let tempPeer;
           if(this.busyPeers.keys().length > 0){
               tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
-              this.busyPeers.delete(tempPeer);
+              this.busyPeers.delete(this.busyPeers.keys()[0]);
           }
           this.p = this.availablePeers.shift();
           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
-          this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)});
-          this.availablePeers.push(tempPeer);
+          this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
+          if(tempPeer) this.availablePeers.push(tempPeer.peer);
         // }
         // if (
         //   prevEntries &&
@@ -124,6 +125,8 @@ module.exports = class WantManager {
 
         if (this.interval) clearInterval(this.interval);
         this.interval = setInterval(() => {
+          if(this.availablePeers.length === 0)
+            return
           if (
             entries[0] &&
             entries[1] &&
@@ -137,7 +140,7 @@ module.exports = class WantManager {
             this.p = this.availablePeers.shift();
             console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
             this.p.addEntries(entries);
-            this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
+            this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
           }
           if (
             prevEntries.length === 1 &&
@@ -158,7 +161,7 @@ module.exports = class WantManager {
             console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
             this.p.addEntries(entries);
             // this.p.
-            this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
+            this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
 
           }
         }, retryTime * 1000);
