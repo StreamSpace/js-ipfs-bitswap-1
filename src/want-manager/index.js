@@ -17,6 +17,7 @@ module.exports = class WantManager {
     this._peerId = peerId;
     this._log = logger(peerId, "want");
     this.busyPeers = new Map();
+    this.availablePeers = [];
   }
 
   getBusyPeers() {
@@ -86,11 +87,12 @@ module.exports = class WantManager {
     
     if(this.availablePeers.length === 0){
       this.availablePeers = [...$peers];
+      this.busyPeers = new Map();
     }
 
     if (this.availablePeers.length > 0) {
       if (entries.length > 0) {
-        console.log("all peers prev", prevEntries, new Date().getTime());
+        console.log("all peers prev", this.availablePeers, prevEntries, new Date().getTime());
 
         // if (prevEntries.length === 0) {
           
@@ -98,13 +100,14 @@ module.exports = class WantManager {
         let tempPeer;
           if(this.busyPeers.keys().length > 0){
               tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
-              this.busyPeers.delete(tempPeer);
+              console.log('temp peer',tempPeer);
+              this.busyPeers.delete(this.busyPeers.keys()[0]);
           }
           this.p = this.availablePeers.shift();
           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
-          this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)});
-          this.availablePeers.push(tempPeer);
+          this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000) ,peer : this.p});
+          if(tempPeer) this.availablePeers.push(tempPeer.peer);
         // }
         // if (
         //   prevEntries &&
@@ -124,6 +127,7 @@ module.exports = class WantManager {
 
         if (this.interval) clearInterval(this.interval);
         this.interval = setInterval(() => {
+          if(this.availablePeers.length === 0) return;
           if (
             entries[0] &&
             entries[1] &&
