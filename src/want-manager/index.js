@@ -158,20 +158,21 @@ module.exports = class WantManager {
             ) {
               
               let requestSentTo = this.sentRequests.get(entries[0].entry.cid.string)
-              console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
+              console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
   
               // clearTimeout(interval);
               // this.p = $peers[Math.floor(Math.random() * $peers.length)];
               let rPeers = this.availablePeers.filter((ele) => !requestSentTo.peers.includes(ele))
               console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
 
+             if(rPeers && rPeers.length > 0) { 
               this.p = rPeers.shift();
   
               console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
               this.p.addEntries(entries);
               // this.p.
               this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-              this.sentRequests.set(entries[0].entry.cid.string, {peers: [...requestSentTo.peers, this.p]})
+              this.sentRequests.set(entries[0].entry.cid.string, {peers: [...requestSentTo.peers, this.p]})}
             }
           }
 
