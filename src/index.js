@@ -94,7 +94,7 @@ class Bitswap {
     this.wm.cancelWants(wanted)
     
     // remove from busy peer
-    this.wm.removeBusyPeer(peerId)
+    this.wm.removeBusyPeer(peerId,blocks)
 
     await Promise.all(blocks.map(async (b) => {
       const wasWanted = wanted.includes(b.cid)
