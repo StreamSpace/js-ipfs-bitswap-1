@@ -91,7 +91,7 @@ class Bitswap {
       .filter((b) => this.wm.wantlist.contains(b.cid))
       .map((b) => b.cid)
 
-    this.wm.cancelWants(wanted)
+    this.wm.cancelWants([...wanted])
     
     // remove from busy peer
     this.wm.removeBusyPeer(peerId,blocks)

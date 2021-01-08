@@ -5,7 +5,7 @@ const Wantlist = require("../types/wantlist");
 const CONSTANTS = require("../constants");
 const MsgQueue = require("./msg-queue");
 const logger = require("../utils").logger;
-let retryTime = 3
+let retryTime = 1
 module.exports = class WantManager {
   constructor(peerId, network, stats) {
     this.peers = new Map();
@@ -19,7 +19,6 @@ module.exports = class WantManager {
     this.busyPeers = new Map();
     this.availablePeers = [];
     this.sentRequests = new Map();
-    this.prevEntries = [];
 
   }
 
@@ -66,6 +65,7 @@ module.exports = class WantManager {
   }
 
   _addEntries(cids, cancel, force) {
+    console.log('cids add entries func',cids,cancel)
     const entries = cids.map((cid, i) => {
       return new Message.Entry(
         cid,
@@ -99,23 +99,26 @@ module.exports = class WantManager {
 
     if (this.availablePeers.length > 0) {
       if (entries.length > 0) {
-        console.log('already asent request',!this.sentRequests.has(entries[0].entry.cid.string),JSON.stringify(entries),this.sentRequests,entries[0].entry.cid.string)
-        if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string) && entries[0].cancel ) {
-          let requestSentToPeers = this.sentRequests.get(entries[0].entry.cid.string)
-          console.log("selected peer cancel", requestSentToPeers.peers, entries, parseInt(new Date().getTime()/ 1000));
-
-          for(let i of requestSentToPeers.peers){
-            i.addEntries(entries)
-          }
-
-          this.sentRequests.delete(entries[0].entry.cid.string)
+        let entryString = entries[0].entry.cid.string;
+        if(!entryString){
+          entryString = entries[0].entry.cid.toString();
         }
-        else if(entries[0].entry.cid.string && !this.sentRequests.has(entries[0].entry.cid.string)){
+        console.log('selected peer intial',this.sentRequests.has(entryString), entries[0].cancel, entries)
+        if(entryString && this.sentRequests.has(entryString) && entries[0].cancel ) {
+          let requestSentToPeers = this.sentRequests.get(entryString)
+          console.log("selected peer cancel", requestSentToPeers.peer, entries, parseInt(new Date().getTime()/ 1000));
+
+         
+          requestSentToPeers.peer.addEntries(entries)
+
+          this.sentRequests.delete(entryString)
+        }
+        else if(entryString && !this.sentRequests.has(entryString) && !entries[0].cancel){
           console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
           let tempPeer;
          
           this.p = this.availablePeers.shift();
-          this.sentRequests.set(entries[0].entry.cid.string, {peers: [this.p]})
+          this.sentRequests.set(entryString, {peer: this.p})
           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
           if(this.busyPeers.keys().length > 0){
@@ -128,49 +131,27 @@ module.exports = class WantManager {
         } 
           
         else{
-          console.log('no condition satisfied');
+          console.log('no condition satisfied',entries[0].entry.cid);
+          console.log('no function',entries[0].entry.cid.toString());
         }
-        // }
-        // if (
-        //   this.prevEntries &&
-        //   entries &&
-        //   this.prevEntries[0] &&
-        //   entries[0] &&
-        //   entries[0].entry.cid.string !== this.prevEntries[0].entry.cid.string
-        // ) {
-          
-        //   console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
-
-        //   this.p = this.availablePeers[Math.floor(Math.random() * this.availablePeers.length)];
-        //   console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
-        //   this.p.addEntries(entries);
-        //   this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
-        // }
-
         if (this.interval) clearInterval(this.interval);
         this.interval = setInterval(() => {
           if(this.availablePeers.length === 0){
             console.log('return due to no available peers');
             return
-          }
-
-          
-          if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string)) {
-            if (
-              this.prevEntries.length === 1 &&
-              entries.length === 1 &&
-              this.prevEntries[0] &&
-              entries[0] &&
-              entries[0].entry.cid.string === this.prevEntries[0].entry.cid.string &&
-              !entries[0].cancel
-            ) {
-              
-              let requestSentTo = this.sentRequests.get(entries[0].entry.cid.string)
+          }          
+          if(entryString && this.sentRequests.has(entryString)) {
+              let requestSentTo = this.sentRequests.get(entryString)         
+              let fallbackentries = entries.map(ele=>{
+                if(!ele.cancel) {
+                  ele.cancel = true
+                }
+                return ele
+              })
+              console.log('add cancel request',requestSentTo.peer,fallbackentries);
+              requestSentTo.peer.addEntries(fallbackentries);
               console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
-  
-              // clearTimeout(interval);
-              // this.p = $peers[Math.floor(Math.random() * $peers.length)];
-              let rPeers = this.availablePeers.filter((ele) => !requestSentTo.peers.includes(ele))
+              let rPeers = this.availablePeers.filter((ele) => ele !== requestSentTo.peer)
               console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
 
              if(rPeers && rPeers.length > 0) { 
@@ -178,29 +159,21 @@ module.exports = class WantManager {
   
               console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
               this.p.addEntries(entries);
-              // this.p.
               this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-              this.sentRequests.set(entries[0].entry.cid.string, {peers: [...requestSentTo.peers, this.p]})
+              this.sentRequests.set(entryString, {peer:  this.p})
             }
             else{
               console.log('rpeers not defined or blank array')
             }
             }
-          }
-
           else{
 
-          console.log('wasted one request');  
+          console.log('wasted one request', entryString, entryString);  
 
           }
         }, retryTime * 1000);
       }
     }
-
-    if (entries) {
-      this.prevEntries = [...entries];
-    }
-
     // let i= 0;
     // for (const p of this.peers.values()) {
     //   if(i<2){
@@ -251,6 +224,7 @@ module.exports = class WantManager {
 
   // add all the cids to the wantlist
   wantBlocks(cids, options = {}) {
+    console.log('cids want',cids);
     this._addEntries(cids, false);
 
     if (options && options.signal) {
@@ -262,14 +236,19 @@ module.exports = class WantManager {
 
   // remove blocks of all the given keys without respecting refcounts
   unwantBlocks(cids) {
+    console.log('cids unwant',cids)
     this._log("unwant blocks: %s", cids.length);
     this._addEntries(cids, true, true);
   }
 
   // cancel wanting all of the given keys
   cancelWants(cids) {
+    if(!cids.length && typeof(cids) === 'object') cids = [cids];
+    console.log('cids cancelwant',cids)
     this._log("cancel wants: %s", cids.length);
-    this._addEntries(cids, true);
+    if(cids.length > 0){
+       this._addEntries(cids, true);
+    }
   }
 
   // Returns a list of all currently connected peers
