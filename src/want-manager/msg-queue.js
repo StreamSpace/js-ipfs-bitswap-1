@@ -26,6 +26,8 @@ module.exports = class MsgQueue {
   }
 
   addEntries (entries) {
+    // 
+    console.log("message queue add entries", entries)
     this._entries = this._entries.concat(entries)
     this.sendEntries()
   }

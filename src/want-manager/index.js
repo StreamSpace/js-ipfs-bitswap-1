@@ -103,10 +103,10 @@ module.exports = class WantManager {
         if(!entryString){
           entryString = entries[0].entry.cid.toString();
         }
-        console.log('selected peer intial',this.sentRequests.has(entryString), entries[0].cancel, entries)
+        console.log('selected peer intial',this.sentRequests.has(entryString), entries[0].cancel, entries.toString())
         if(entryString && this.sentRequests.has(entryString) && entries[0].cancel ) {
           let requestSentToPeers = this.sentRequests.get(entryString)
-          console.log("selected peer cancel", requestSentToPeers.peer, entries, parseInt(new Date().getTime()/ 1000));
+          console.log("selected peer cancel", requestSentToPeers.peer, entries.toString(), parseInt(new Date().getTime()/ 1000));
 
          
           requestSentToPeers.peer.addEntries(entries)
@@ -119,7 +119,7 @@ module.exports = class WantManager {
          
           this.p = this.availablePeers.shift();
           this.sentRequests.set(entryString, {peer: this.p})
-          console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
+          console.log("selected peer sent", this.p, entries.toString(), parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
           if(this.busyPeers.keys().length > 0){
             tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
@@ -141,31 +141,43 @@ module.exports = class WantManager {
             return
           }          
           if(entryString && this.sentRequests.has(entryString)) {
-              let requestSentTo = this.sentRequests.get(entryString)         
-              let fallbackentries = entries.map(ele=>{
-                if(!ele.cancel) {
-                  ele.cancel = true
-                }
-                return ele
-              })
-              console.log('add cancel request',requestSentTo.peer,fallbackentries);
+            let requestSentTo = this.sentRequests.get(entryString)  
+            console.log('selected peer add cancel request',requestSentTo.peer,entries.toString());
+      
+            
+
+            let fallbackentries = []
+            for (let ele of entries){
+              if(!ele.cancel) {
+                ele.cancel = true
+                fallbackentries.push(ele)
+
+              }
+
+            }
+            // console.log("FALL")
+            if(fallbackentries && fallbackentries.length>0) {
               requestSentTo.peer.addEntries(fallbackentries);
+
+            
               console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
               let rPeers = this.availablePeers.filter((ele) => ele !== requestSentTo.peer)
               console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
 
-             if(rPeers && rPeers.length > 0) { 
-              this.p = rPeers.shift();
-  
-              console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
-              this.p.addEntries(entries);
-              this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-              this.sentRequests.set(entryString, {peer:  this.p})
+              if(rPeers && rPeers.length > 0) { 
+                this.p = rPeers.shift();
+    
+                console.log("selected peer fallback", this.p, entries.toString(), fallbackentries.toString(), parseInt(new Date().getTime()/ 1000));
+                this.p.addEntries(entries);
+                this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
+                this.sentRequests.set(entryString, {peer:  this.p})
+              }
+          
+              else{
+                console.log('rpeers not defined or blank array')
+              }
             }
-            else{
-              console.log('rpeers not defined or blank array')
-            }
-            }
+          }
           else{
 
           console.log('wasted one request', entryString, entryString);  
