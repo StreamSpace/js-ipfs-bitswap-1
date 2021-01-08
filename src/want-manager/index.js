@@ -20,7 +20,8 @@ module.exports = class WantManager {
     this.availablePeers = [];
     this.sentRequests = new Map();
     this.prevEntries = [];
-
+    this.storedCIDS = [];
+    this.root = false;
   }
 
   getBusyPeers() {
@@ -66,6 +67,7 @@ module.exports = class WantManager {
   }
 
   _addEntries(cids, cancel, force) {
+    console.log("ADD ENTRIES CIDD LENGHT", cids.length)
     const entries = cids.map((cid, i) => {
       return new Message.Entry(
         cid,
@@ -91,115 +93,119 @@ module.exports = class WantManager {
 
     // broadcast changes
     let $peers = Array.from(this.peers.values());
-    console.log("all peers", $peers, this.availablePeers, entries, parseInt(new Date().getTime()/ 1000));
-    if(this.availablePeers.length === 0){
-      this.availablePeers = [...$peers];
-      this.busyPeers = new Map();
-    }
+    console.log("all peers", $peers, entries, parseInt(new Date().getTime()/ 1000));
 
-    if (this.availablePeers.length > 0) {
-      if (entries.length > 0) {
-        console.log('already asent request',!this.sentRequests.has(entries[0].entry.cid.string),JSON.stringify(entries),this.sentRequests,entries[0].entry.cid.string)
-        if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string) && entries[0].cancel ) {
-          let requestSentToPeers = this.sentRequests.get(entries[0].entry.cid.string)
-          console.log("selected peer cancel", requestSentToPeers.peers, entries, parseInt(new Date().getTime()/ 1000));
+    this.p = $peers[Math.floor(Math.random() * $peers.length)];
+    console.log("THIS.P", this.p)
+    this.p.addEntries(entries)
+    // if(this.availablePeers.length === 0){
+    //   this.availablePeers = [...$peers];
+    //   this.busyPeers = new Map();
+    // }
 
-          for(let i of requestSentToPeers.peers){
-            i.addEntries(entries)
-          }
+    // if (this.availablePeers.length > 0) {
+    //   if (entries.length > 0) {
+    //     console.log('already asent request',!this.sentRequests.has(entries[0].entry.cid.string),JSON.stringify(entries),this.sentRequests,entries[0].entry.cid.string)
+    //     if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string) && entries[0].cancel ) {
+    //       let requestSentToPeers = this.sentRequests.get(entries[0].entry.cid.string)
+    //       console.log("selected peer cancel", requestSentToPeers.peers, entries, parseInt(new Date().getTime()/ 1000));
 
-          this.sentRequests.delete(entries[0].entry.cid.string)
-        }
-        else if(entries[0].entry.cid.string && !this.sentRequests.has(entries[0].entry.cid.string)){
-          console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
-          let tempPeer;
+    //       for(let i of requestSentToPeers.peers){
+    //         i.addEntries(entries)
+    //       }
+
+    //       this.sentRequests.delete(entries[0].entry.cid.string)
+    //     }
+    //     else if(entries[0].entry.cid.string && !this.sentRequests.has(entries[0].entry.cid.string)){
+    //       console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
+    //       let tempPeer;
          
-          this.p = this.availablePeers.shift();
-          this.sentRequests.set(entries[0].entry.cid.string, {peers: [this.p]})
-          console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
-          this.p.addEntries(entries);
-          if(this.busyPeers.keys().length > 0){
-            tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
-            this.busyPeers.delete(this.busyPeers.keys()[0]);
-           }
-          this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-          if(tempPeer) this.availablePeers.push(tempPeer.peer);
+    //       this.p = this.availablePeers.shift();
+    //       this.sentRequests.set(entries[0].entry.cid.string, {peers: [this.p]})
+    //       console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
+    //       this.p.addEntries(entries);
+    //       if(this.busyPeers.keys().length > 0){
+    //         tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
+    //         this.busyPeers.delete(this.busyPeers.keys()[0]);
+    //        }
+    //       this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
+    //       if(tempPeer) this.availablePeers.push(tempPeer.peer);
 
-        } 
+    //     } 
           
-        else{
-          console.log('no condition satisfied');
-        }
-        // }
-        // if (
-        //   this.prevEntries &&
-        //   entries &&
-        //   this.prevEntries[0] &&
-        //   entries[0] &&
-        //   entries[0].entry.cid.string !== this.prevEntries[0].entry.cid.string
-        // ) {
+    //     else{
+    //       console.log('no condition satisfied');
+    //     }
+    //     // }
+    //     // if (
+    //     //   this.prevEntries &&
+    //     //   entries &&
+    //     //   this.prevEntries[0] &&
+    //     //   entries[0] &&
+    //     //   entries[0].entry.cid.string !== this.prevEntries[0].entry.cid.string
+    //     // ) {
           
-        //   console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
+    //     //   console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, parseInt(new Date().getTime()/ 1000));
 
-        //   this.p = this.availablePeers[Math.floor(Math.random() * this.availablePeers.length)];
-        //   console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
-        //   this.p.addEntries(entries);
-        //   this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
-        // }
+    //     //   this.p = this.availablePeers[Math.floor(Math.random() * this.availablePeers.length)];
+    //     //   console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
+    //     //   this.p.addEntries(entries);
+    //     //   this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000)})
+    //     // }
 
-        if (this.interval) clearInterval(this.interval);
-        this.interval = setInterval(() => {
-          if(this.availablePeers.length === 0){
-            console.log('return due to no available peers');
-            return
-          }
+    //     if (this.interval) clearInterval(this.interval);
+    //     this.interval = setInterval(() => {
+    //       if(this.availablePeers.length === 0){
+    //         console.log('return due to no available peers');
+    //         return
+    //       }
 
           
-          if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string)) {
-            if (
-              this.prevEntries.length === 1 &&
-              entries.length === 1 &&
-              this.prevEntries[0] &&
-              entries[0] &&
-              entries[0].entry.cid.string === this.prevEntries[0].entry.cid.string &&
-              !entries[0].cancel
-            ) {
+    //       if(entries[0].entry.cid.string && this.sentRequests.has(entries[0].entry.cid.string)) {
+    //         if (
+    //           this.prevEntries.length === 1 &&
+    //           entries.length === 1 &&
+    //           this.prevEntries[0] &&
+    //           entries[0] &&
+    //           entries[0].entry.cid.string === this.prevEntries[0].entry.cid.string &&
+    //           !entries[0].cancel
+    //         ) {
               
-              let requestSentTo = this.sentRequests.get(entries[0].entry.cid.string)
-              console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
+    //           let requestSentTo = this.sentRequests.get(entries[0].entry.cid.string)
+    //           console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
   
-              // clearTimeout(interval);
-              // this.p = $peers[Math.floor(Math.random() * $peers.length)];
-              let rPeers = this.availablePeers.filter((ele) => !requestSentTo.peers.includes(ele))
-              console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
+    //           // clearTimeout(interval);
+    //           // this.p = $peers[Math.floor(Math.random() * $peers.length)];
+    //           let rPeers = this.availablePeers.filter((ele) => !requestSentTo.peers.includes(ele))
+    //           console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
 
-             if(rPeers && rPeers.length > 0) { 
-              this.p = rPeers.shift();
+    //          if(rPeers && rPeers.length > 0) { 
+    //           this.p = rPeers.shift();
   
-              console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
-              this.p.addEntries(entries);
-              // this.p.
-              this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-              this.sentRequests.set(entries[0].entry.cid.string, {peers: [...requestSentTo.peers, this.p]})
-            }
-            else{
-              console.log('rpeers not defined or blank array')
-            }
-            }
-          }
+    //           console.log("selected peer", this.p, entries, parseInt(new Date().getTime()/ 1000));
+    //           this.p.addEntries(entries);
+    //           // this.p.
+    //           this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
+    //           this.sentRequests.set(entries[0].entry.cid.string, {peers: [...requestSentTo.peers, this.p]})
+    //         }
+    //         else{
+    //           console.log('rpeers not defined or blank array')
+    //         }
+    //         }
+    //       }
 
-          else{
+    //       else{
 
-          console.log('wasted one request');  
+    //       console.log('wasted one request');  
 
-          }
-        }, retryTime * 1000);
-      }
-    }
+    //       }
+    //     }, retryTime * 1000);
+    //   }
+    // }
 
-    if (entries) {
-      this.prevEntries = [...entries];
-    }
+    // if (entries) {
+    //   this.prevEntries = [...entries];
+    // }
 
     // let i= 0;
     // for (const p of this.peers.values()) {
@@ -251,7 +257,17 @@ module.exports = class WantManager {
 
   // add all the cids to the wantlist
   wantBlocks(cids, options = {}) {
-    this._addEntries(cids, false);
+    this.storedCIDS.push(cids)
+    console.log("INSIDE WANT BLOCK", cids)
+    if(this.root && this.storedCIDS.length === 2) {
+      this._addEntries(this.storedCIDS, false);
+      this.storedCIDS = []
+    }
+    if(!this.root){
+      this._addEntries(cids, false);
+      this.root = true;
+      this.storedCIDS = []
+    }
 
     if (options && options.signal) {
       options.signal.addEventListener("abort", () => {

@@ -252,9 +252,11 @@ class Bitswap {
    * @param {AbortSignal} options.abortSignal
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids, options = {}) {
-    for await (const cid of cids) {
-      yield this.get(cid, options)
+  async getMany (cids, options = {}) {
+    console.log("CIDSSSS", cids)
+    for (const cid of cids) {
+       this.get(cid, options)
+      //  yield "hello"
     }
 
     console.log('completed get many')
