@@ -257,8 +257,9 @@ module.exports = class WantManager {
 
   // add all the cids to the wantlist
   wantBlocks(cids, options = {}) {
-    this.storedCIDS.push(cids)
-    console.log("INSIDE WANT BLOCK", cids)
+    // this._addEntries(cids, false);
+    this.storedCIDS = [...this.storedCIDS,...cids]
+    console.log("INSIDE WANT BLOCK", cids, "ssssssssssss", this.storedCIDS)
     if(this.root && this.storedCIDS.length === 2) {
       this._addEntries(this.storedCIDS, false);
       this.storedCIDS = []
