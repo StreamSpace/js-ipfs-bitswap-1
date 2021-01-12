@@ -6,6 +6,8 @@ const Message = require('../types/message')
 const logger = require('../utils').logger
 const { wantlistSendDebounceMs } = require('../constants')
 
+const _ = require('lodash');
+
 module.exports = class MsgQueue {
   constructor (selfPeerId, otherPeerId, network) {
     this.peerId = otherPeerId
@@ -14,7 +16,8 @@ module.exports = class MsgQueue {
 
     this._entries = []
     this._log = logger(selfPeerId, 'msgqueue', otherPeerId.toB58String().slice(0, 8))
-    this.sendEntries = debounce(this._sendEntries.bind(this), wantlistSendDebounceMs)
+    this.sendEntries = debounce(this._sendEntries.bind(this), wantlistSendDebounceMs);
+    this._sentEntries = [];
   }
 
   addMessage (msg) {
@@ -26,8 +29,8 @@ module.exports = class MsgQueue {
   }
 
   addEntries (entries) {
-    this._entries = this._entries.concat(entries)
-    this.sendEntries()
+      this._entries = this._entries.concat(entries);
+      this.sendEntries()
   }
 
   _sendEntries () {
@@ -43,6 +46,7 @@ module.exports = class MsgQueue {
         msg.addEntry(entry.cid, entry.priority)
       }
     })
+    this._sentEntries = this._entries;
     this._entries = []
     this.addMessage(msg)
   }

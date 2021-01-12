@@ -97,6 +97,7 @@ module.exports = class WantManager {
       } else {
         this._log("adding to wl");
         this.wantlist.add(e.cid, e.priority);
+        console.log('adding to want list --',e.cid,this.wantlist.entries());
       }
     });
 
@@ -149,56 +150,56 @@ module.exports = class WantManager {
           console.log('no condition satisfied',entries[0].entry.cid);
           console.log('no function',entries[0].entry.cid.toString());
         }
-        if (this.interval) clearInterval(this.interval);
-        this.interval = setInterval(() => {
-          if(this.availablePeers.length === 0){
-            console.log('return due to no available peers');
-            return
-          }          
-          if(entryString && this.sentRequests.has(entryString)) {
-            let requestSentTo = this.sentRequests.get(entryString)  
-            console.log('selected peer add cancel request',requestSentTo.peer,entries.toString());
+        // if (this.interval) clearInterval(this.interval);
+        // this.interval = setInterval(() => {
+        //   if(this.availablePeers.length === 0){
+        //     console.log('return due to no available peers');
+        //     return
+        //   }          
+        //   if(entryString && this.sentRequests.has(entryString)) {
+        //     let requestSentTo = this.sentRequests.get(entryString)  
+        //     console.log('selected peer add cancel request',requestSentTo.peer,entries.toString());
       
             
 
-            let fallbackentries = []
-            for (let ele of entries){
-              if(!ele.cancel) {
-                ele.cancel = true
-                fallbackentries.push(ele)
+        //     let fallbackentries = []
+        //     for (let ele of entries){
+        //       if(!ele.cancel) {
+        //         ele.cancel = true
+        //         fallbackentries.push(ele)
 
-              }
+        //       }
 
-            }
-            // console.log("FALL")
-            if(fallbackentries && fallbackentries.length>0) {
-              requestSentTo.peer.addEntries(fallbackentries);
+        //     }
+        //     // console.log("FALL")
+        //     if(fallbackentries && fallbackentries.length>0) {
+        //       requestSentTo.peer.addEntries(fallbackentries);
 
             
-              console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
-              let rPeers = this.availablePeers.filter((ele) => ele !== requestSentTo.peer)
-              console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
+        //       console.log("AVAILABLE PEERS", this.availablePeers, this.busyPeers, "requestSentTo", requestSentTo, parseInt(new Date().getTime()/ 1000));
+        //       let rPeers = this.availablePeers.filter((ele) => ele !== requestSentTo.peer)
+        //       console.log("entries second condition", entries, this.prevEntries, rPeers, parseInt(new Date().getTime()/ 1000));
 
-              if(rPeers && rPeers.length > 0) { 
-                this.p = rPeers.shift();
+        //       if(rPeers && rPeers.length > 0) { 
+        //         this.p = rPeers.shift();
     
-                console.log("selected peer fallback", this.p, entries.toString(), fallbackentries.toString(), parseInt(new Date().getTime()/ 1000));
-                this.p.addEntries(entries);
-                this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
-                this.sentRequests.set(entryString, {peer:  this.p})
-              }
+        //         console.log("selected peer fallback", this.p, entries.toString(), fallbackentries.toString(), parseInt(new Date().getTime()/ 1000));
+        //         this.p.addEntries(entries);
+        //         this.busyPeers.set(this.p.peerId.toB58String(), {blockProcessing: true, addedAt: parseInt(new Date().getTime()/ 1000), peer: this.p});
+        //         this.sentRequests.set(entryString, {peer:  this.p})
+        //       }
           
-              else{
-                console.log('rpeers not defined or blank array')
-              }
-            }
-          }
-          else{
+        //       else{
+        //         console.log('rpeers not defined or blank array')
+        //       }
+        //     }
+        //   }
+        //   else{
 
-          console.log('wasted one request', entryString, entryString);  
+        //   console.log('wasted one request', entryString, entryString);  
 
-          }
-        }, retryTime * 1000);
+        //   }
+        // }, retryTime * 1000);
       }
     }
 
@@ -227,13 +228,13 @@ module.exports = class WantManager {
     mq = new MsgQueue(this._peerId, peerId, this.network);
 
     // new peer, give them the full wantlist
-    const fullwantlist = new Message(true);
+    // const fullwantlist = new Message(true);
 
-    for (const entry of this.wantlist.entries()) {
-      fullwantlist.addEntry(entry[1].cid, entry[1].priority);
-    }
+    // for (const entry of this.wantlist.entries()) {
+    //   fullwantlist.addEntry(entry[1].cid, entry[1].priority);
+    // }
 
-    mq.addMessage(fullwantlist);
+    // mq.addMessage(fullwantlist);
 
     this.peers.set(peerId.toB58String(), mq);
     return mq;
