@@ -92,10 +92,12 @@ class Bitswap {
       .map((b) => b.cid)
 
     this.wm.cancelWants(wanted)
+    // remove from busy peer
+    this.wm.removeBusyPeer(peerId,blocks)
 
     await Promise.all(blocks.map(async (b) => {
       const wasWanted = wanted.includes(b.cid)
-      await this._handleReceivedBlock(peerId, b, wasWanted)
+      await this._handleReceivedBlock(peerId, b, wasWanted);
     }))
   }
 
@@ -249,9 +251,11 @@ class Bitswap {
    * @param {AbortSignal} options.abortSignal
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids, options = {}) {
-    for await (const cid of cids) {
-      yield this.get(cid, options)
+  async getMany (cids, options = {}) {
+    console.log("CIDSSSS", cids)
+    for (const cid of cids) {
+       this.get(cid, options)
+      //  yield "hello"
     }
 
     console.log('completed get many')
