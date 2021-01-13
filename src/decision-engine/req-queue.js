@@ -40,6 +40,7 @@ class RequestQueue {
    * @param {TaskMerger} taskMerger
    */
   constructor (taskMerger) {
+    console.log("MERGERRRRRRRRRR", taskMerger)
     this._taskMerger = taskMerger || DefaultTaskMerger
     this._byPeer = new SortedMap([], PeerTasks.compare, true)
   }
