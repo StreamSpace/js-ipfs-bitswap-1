@@ -78,29 +78,32 @@ class Network {
    * @returns {void}
    */
   async _onConnection ({ protocol, stream, connection }) {
+    console.log("------------INSIDE ONCONNECTION------------------", this._running)
     if (!this._running) { return }
     this._log('incoming new bitswap %s connection from %s', protocol, connection.remotePeer.toB58String())
-
-    try {
-      await pipe(
-        stream,
-        lp.decode(),
-        async (source) => {
-          for await (const data of source) {
-            try {
-              const message = await Message.deserialize(data.slice())
-              await this.bitswap._receiveMessage(connection.remotePeer, message)
-            } catch (err) {
-              this.bitswap._receiveError(err)
-              break
+    // if(this._running) {
+      try {
+        await pipe(
+          stream,
+          lp.decode(),
+          async (source) => {
+            for await (const data of source) {
+              try {
+                const message = await Message.deserialize(data.slice())
+                await this.bitswap._receiveMessage(connection.remotePeer, message)
+              } catch (err) {
+                this.bitswap._receiveError(err)
+                break
+              }
             }
           }
-        }
-      )
-    } catch (err) {
-      this._log(err)
+        )
+      } catch (err) {
+        this._log(err)
+      }
+    // }
     }
-  }
+    
 
   _onPeerConnect (peerId) {
     this.bitswap._onPeerConnected(peerId)
@@ -162,8 +165,13 @@ class Network {
   // Connect to the given peer
   // Send the given msg (instance of Message) to the given peer
   async sendMessage (peer, msg) {
-    if (!this._running) throw new Error('network isn\'t running')
+    console.log("inside onconnection!!!!!!!!!!!!!", this._running)
+    if (!this._running) {
+      throw new Error('network isn\'t running')
+    }
+    else {
 
+    
     const stringId = peer.toB58String()
     this._log('sendMessage to %s', stringId, msg)
 
@@ -187,6 +195,7 @@ class Network {
 
     this._updateSentStats(peer, msg.blocks)
   }
+  }
 
   /**
    * Connects to another peer
@@ -199,9 +208,11 @@ class Network {
   async connectTo (peer, options) { // eslint-disable-line require-await
     if (!this._running) {
       throw new Error('network isn\'t running')
+    }else{
+      return this.libp2p.dial(peer, options)
+
     }
 
-    return this.libp2p.dial(peer, options)
   }
 
   // Dial to the peer and try to use the most recent Bitswap

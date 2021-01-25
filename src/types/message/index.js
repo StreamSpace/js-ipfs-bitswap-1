@@ -29,6 +29,7 @@ class BitswapMessage {
       wantType = BitswapMessage.WantType.Block
     }
 
+    console.log("TYPE MESSAGE ADD ENTRY ", cid)
     const cidStr = cid.toString('base58btc')
     const entry = this.wantlist.get(cidStr)
     if (entry) {

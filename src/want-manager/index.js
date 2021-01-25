@@ -113,12 +113,16 @@ module.exports = class WantManager {
       this.busyPeers = new Map();
     }
 
+
     if (this.availablePeers.length > 0) {
       if (entries.length > 0) {
         let entryString = entries[0].entry.cid.string;
         if(!entryString){
           entryString = entries[0].entry.cid.toString();
         }
+
+        console.log(" REQUESTEDDD CIDDDDDSSSSS&&&&&&&&&&&&&&&&&&&& GETTTTTTT WANTTTT", entryString, this.sentRequests.has(entryString), entries)
+
         console.log('selected peer intial',this.sentRequests.has(entryString), entries[0].cancel, entries.toString())
         if(entryString && this.sentRequests.has(entryString) && entries[0].cancel ) {
           let requestSentToPeers = this.sentRequests.get(entryString)
@@ -137,6 +141,8 @@ module.exports = class WantManager {
           this.sentRequests.set(entryString, {peer: this.p})
           console.log("selected peer sent", this.p, entries.toString(), parseInt(new Date().getTime()/ 1000));
           this.p.addEntries(entries);
+          console.log(" REQUESTEDDD CIDDDDDSSSSS&&&&&&&&&&&&&&&&&&&& WANTTTT", entryString, this.p.peerId.toB58String(), new Date().getTime()/1000)
+
           if(this.busyPeers.keys().length > 0){
             tempPeer = this.busyPeers.get(this.busyPeers.keys()[0]);
             this.busyPeers.delete(this.busyPeers.keys()[0]);
@@ -274,7 +280,8 @@ module.exports = class WantManager {
 
     if (options && options.signal) {
       options.signal.addEventListener("abort", () => {
-        this.cancelWants(cids);
+        console.log("ABORTTTTTTT ", cids[0].toString())
+        this.cancelWants(cids[0]);
       });
     }
   }

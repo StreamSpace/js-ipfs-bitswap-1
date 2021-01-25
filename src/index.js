@@ -60,6 +60,7 @@ class Bitswap {
     this.wm = new WantManager(this.peerId, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerId)
+    this.pause = false
   }
 
   get peerId () {
@@ -186,6 +187,7 @@ class Bitswap {
    * @returns {Promise<Block>}
    */
   async get (cid, options = {}) {
+    console.log(" REQUESTEDDD CIDDDDDSSSSS&&&&&&&&&&&&&&&&&&&& GETTTTTTT", cid.toString())
     const fetchFromNetwork = (cid, options) => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
@@ -200,6 +202,7 @@ class Bitswap {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
         const block = await this.blockstore.get(cid, options)
+        console.log(" REQUESTEDDD CIDDDDDSSSSS&&&&&&&&&&&&&&&&&&&& GETTTTTTT blockkk", cid.toString(), block)
 
         return block
       } catch (err) {
@@ -213,6 +216,8 @@ class Bitswap {
           this.network.findAndConnect(cid)
             .catch((err) => this._log.error(err))
         }
+
+        console.log(" REQUESTEDDD CIDDDDDSSSSS&&&&&&&&&&&&&&&&&&&& GETTTTTTT blockkk", cid.toString())
 
         // we don't have the block locally so fetch it from the network
         return fetchFromNetwork(cid, options)
